@@ -1,4 +1,5 @@
-module.exports = (content, title) => `<!doctype html>
+export default function wrapHtml(content: string, title: string): string {
+    return `<!doctype html>
 <html>
     <head>
         <meta charset="UTF-8">
@@ -15,3 +16,4 @@ ${content}        </pre>
     </body>
 </html>
 `;
+}

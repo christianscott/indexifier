@@ -1,40 +1,35 @@
-const archy = require('archy');
+import * as archy from 'archy';
+import type * as dirTree from 'directory-tree';
 
-const wrapHref = require('./wrapHref');
-const wrapHtml = require('./wrapHtml');
+import wrapHref from './wrapHref';
+import wrapHtml from './wrapHtml';
+
+export type Node = dirTree.DirectoryTree;
 
 /**
  * Base printer class. Cannot be implemented directly.
  */
-class AbstractPrinter {
-    constructor() {
-        if (this.constructor === AbstractPrinter) {
-            throw new Error('AbstractPrinter is abstract and cannot be constructed directly');
-        }
-    }
-
-    _dirTreeToArchyTree(node) {
+export abstract class AbstractPrinter {
+    private dirTreeToArchyTree(node: Node): archy.Data {
         if (!node.children) {
-            return this.printNode(node);
+            return { label: this.printNode(node) };
         }
         return {
             label: this.printNode(node),
-            nodes: node.children.map(childNode => this._dirTreeToArchyTree(childNode)),
+            nodes: node.children.map(childNode => this.dirTreeToArchyTree(childNode)),
         };
     }
 
-    print(node) {
-        return archy(this._dirTreeToArchyTree(node))
+    print(node: Node): string {
+        return archy(this.dirTreeToArchyTree(node))
     }
 
-    printNode(_node) {
-        throw new Error('Printer::printNode is not implemented');
-    }
+    abstract printNode(node: Node): string
 }
 
 /**
  * Prints the tree as simply as possible
- * 
+ *
  * Example:
  * ```
  *   ├─┬ A
@@ -44,8 +39,8 @@ class AbstractPrinter {
  *   └── b.html
  * ```
  */
-class PlainTextPrinter extends AbstractPrinter {
-    printNode(node) {
+export class PlainTextPrinter extends AbstractPrinter {
+    printNode(node: Node): string {
         return node.name;
     }
 }
@@ -53,7 +48,7 @@ class PlainTextPrinter extends AbstractPrinter {
 /**
  * Prints the tree as an HTML document, with the tree printed
  * inside a <pre> element.
- * 
+ *
  * Example (simplified):
  * ```
  *   <!doctype html>
@@ -71,19 +66,20 @@ class PlainTextPrinter extends AbstractPrinter {
  *   </html>
  * ```
  */
-class HtmlPrinter extends AbstractPrinter {
-    constructor(cwd, linkFolders) {
+export class HtmlPrinter extends AbstractPrinter {
+    constructor(
+        private readonly cwd: string,
+        private readonly linkFolders: boolean,
+    ) {
         super();
-        this.cwd = cwd;
-        this.linkFolders = linkFolders;
     }
 
-    print(node) {
+    print(node: Node): string {
         const outTree = super.print(node);
         return wrapHtml(outTree, node.name);
     }
 
-    printNode(node) {
+    printNode(node: Node): string {
         if (node.children) {
             // any node that has children is a "folder"
             return this.linkFolders ? wrapHref(node, this.cwd) : node.name;
@@ -91,5 +87,3 @@ class HtmlPrinter extends AbstractPrinter {
         return wrapHref(node, this.cwd);
     }
 }
-
-module.exports = { AbstractPrinter, PlainTextPrinter, HtmlPrinter };

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander');
 const { version } = require('../package.json');
-const indexifier = require('../');
+const indexifier = require('../dist');
 
 function list(val) {
   return val.split(',');
@@ -22,9 +22,9 @@ program
     try {
       console.log(indexifier(dir, {
           emptyDirectories: program.emptyDirectories,
-          exclude: program.exclude,        
+          exclude: program.exclude,
           fileTypes: program.extensions,
-          include: program.include,        
+          include: program.include,
           isHtml: program.html,
           linkFolders: program.linkFolders,
           maxDepth: program.maxDepth,
